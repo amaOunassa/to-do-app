@@ -49,19 +49,22 @@ export default function ToDoList() {
     if (savedToDos) {
       setMyToDos(savedToDos);
     }
-  }, []);
+  }, [setMyToDos]);
+
   function handleDisplayChange(event) {
     setSelectedValue(event.target.value);
   }
 
-
   return (
     <>
       <Container maxWidth="sm">
-        <Card sx={{ minWidth: 275, backgroundColor: "#E7F2EF" }} style={{
-          maxHeight:"80vh",
-          overflow:"auto"
-        }}>
+        <Card
+          sx={{ minWidth: 275, backgroundColor: "#E7F2EF" }}
+          style={{
+            maxHeight: "80vh",
+            overflow: "auto",
+          }}
+        >
           <CardContent>
             <Typography variant="h2" style={{ fontWeight: "bold" }}>
               Tasks
@@ -71,12 +74,12 @@ export default function ToDoList() {
             <ToggleButtonGroup
               value={selectedValue}
               exclusive
-            onChange={handleDisplayChange}
+              onChange={handleDisplayChange}
               aria-label="text alignment"
               style={{ marginTop: "20px" }}
               color="primary"
             >
-              <ToggleButton value="all" aria-label="left aligned" >
+              <ToggleButton value="all" aria-label="left aligned">
                 All
               </ToggleButton>
               <ToggleButton value="completed" aria-label="centered">
