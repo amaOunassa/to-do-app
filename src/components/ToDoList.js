@@ -11,6 +11,12 @@ import TextField from "@mui/material/TextField";
 import { v4 as uuidv4 } from "uuid";
 import { useState, useContext, useEffect } from "react";
 import { ToDoContext } from "../contexts/ToDoContext";
+// dialog
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
 // Components
 import ToDo from "./ToDo";
 
@@ -20,16 +26,29 @@ export default function ToDoList() {
   const setMyToDos = myToDoContext.setMyToDos;
   const [inputTitle, setInputTitle] = useState("");
   const [selectedValue, setSelectedValue] = useState("all");
-
+  const [open, setOpen] = useState(false);
+  const [dialogToDo, setDialogToDo] = useState(null);
   const completedToDos = mytodo.filter((t) => t.isComplete);
   const unCompletedToDos = mytodo.filter((t) => !t.isComplete);
+  const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
+  const [updatedToDo, setUpdatedToDo] = useState({
+    title: mytodo.title,
+    details: mytodo.details,
+  });
   let filteredToDos = mytodo;
   if (selectedValue === "completed") {
     filteredToDos = completedToDos;
   } else if (selectedValue === "notCompleted") {
     filteredToDos = unCompletedToDos;
   }
-  const myToDos = filteredToDos.map((t) => <ToDo key={t.id} toDoObj={t} />);
+  const myToDos = filteredToDos.map((t) => (
+    <ToDo
+      key={t.id}
+      toDoObj={t}
+      showDelete={openClickDelete}
+      showUpdate={openUpdate}
+    />
+  ));
 
   function handlAddTask() {
     const newToDo = {
@@ -54,9 +73,118 @@ export default function ToDoList() {
   function handleDisplayChange(event) {
     setSelectedValue(event.target.value);
   }
+  // delete dialog handlers
+  function openClickDelete(toDo) {
+    setDialogToDo(toDo);
+    setOpen(true);
+  }
+
+  function handleClose() {
+    setOpen(false);
+  }
+  function handleDeleteConfirm() {
+    const newToDos = mytodo.filter((t) => t.id !== dialogToDo.id);
+    setMyToDos(newToDos);
+    localStorage.setItem("myToDos", JSON.stringify(newToDos));
+    handleClose();
+  }
+  // ====== delete dialog handlers =========
+  // dialog handlers for update
+  function openUpdate(mytodo) {
+    setDialogToDo(mytodo);
+    setUpdatedToDo({ title: mytodo.title, details: mytodo.details });
+    setOpenUpdateDialog(true);
+  }
+  function handleCloseUpdateDialog() {
+    setOpenUpdateDialog(false);
+  }
+  function handleUpdateConfirm() {
+    const id = dialogToDo.id;
+    const newToDos = mytodo.map((t) => {
+      if (t.id === id) {
+        return { ...t, title: updatedToDo.title, details: updatedToDo.details };
+      }
+      return t;
+    });
+    setMyToDos(newToDos);
+    localStorage.setItem("myToDos", JSON.stringify(newToDos));
+    handleCloseUpdateDialog();
+  }
+  // ===== dialog handlers for update =====
 
   return (
     <>
+      {/* Delete Dialog */}
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{"Delete Task?"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to delete this task? This action cannot be
+            undone
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancel</Button>
+          <Button autoFocus onClick={() => handleDeleteConfirm()}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* ===== Delete Dialog ===== */}
+      {/* Update Dialog */}
+      <Dialog open={openUpdateDialog} onClose={handleCloseUpdateDialog}>
+        <DialogTitle>Update Task</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            You can update the title and details of this task. Make sure to save
+            your changes.
+          </DialogContentText>
+          <form id="subscription-form">
+            <TextField
+              autoFocus
+              required
+              margin="dense"
+              id="name"
+              label="Title"
+              type="text"
+              fullWidth
+              variant="standard"
+              value={updatedToDo.title}
+              onChange={(e) =>
+                setUpdatedToDo({ ...updatedToDo, title: e.target.value })
+              }
+            />
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label="Details"
+              type="text"
+              fullWidth
+              variant="standard"
+              value={updatedToDo.details}
+              onChange={(e) =>
+                setUpdatedToDo({ ...updatedToDo, details: e.target.value })
+              }
+            />
+          </form>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseUpdateDialog}>Cancel</Button>
+          <Button
+            onClick={() => handleUpdateConfirm(myToDos.id)}
+            form="subscription-form"
+          >
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* ===== Update Dialog ===== */}
       <Container maxWidth="sm">
         <Card
           sx={{ minWidth: 275, backgroundColor: "#E7F2EF" }}
